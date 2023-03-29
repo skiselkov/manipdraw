@@ -1,0 +1,6 @@
+[submodule "src/libacfutils"]
+	path = src/libacfutils
+	url = https://github.com/skiselkov/libacfutils.git
+[submodule "src/librain"]
+	path = src/librain
+	url = https://github.com/skiselkov/librain.git

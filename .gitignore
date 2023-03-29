@@ -1,0 +1,9 @@
+mac_x64
+lin_x64
+win_x64
+src/CMakeCache.txt
+src/CMakeFiles
+src/Makefile
+src/cmake_install.cmake
+shaders/*.glsl*
+shaders/*.spv

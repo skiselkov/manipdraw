@@ -60,11 +60,11 @@ static GLuint		cursor_tex[2] = {};
 static GLuint		cursor_fbo = 0;
 static GLuint		cursor_pbo = 0;
 static bool		cursor_xfer = false;
-static GLushort		manip_idx = UINT16_MAX;
+static uint16_t		manip_idx = UINT16_MAX;
 
 static uint64_t		last_draw_t = 0;
 static uint64_t		blink_start_t = 0;
-static GLushort		prev_manip_idx = UINT16_MAX;
+static uint16_t		prev_manip_idx = UINT16_MAX;
 
 static shader_info_t generic_vert_info = { .filename = "generic.vert.spv" };
 static shader_info_t resolve_frag_info = { .filename = "resolve.frag.spv" };
@@ -96,7 +96,7 @@ static const char *uniforms[NUM_UNIFORMS] = {
 static void
 resolve_manip_complete(void)
 {
-	GLushort *data;
+	const uint16_t *data;
 
 	/* No transfer in progress, so allow caller to start a new update */
 	if (!cursor_xfer)
@@ -104,7 +104,8 @@ resolve_manip_complete(void)
 
 	ASSERT(cursor_pbo != 0);
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, cursor_pbo);
-	data = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
+	data = (const uint16_t *)glMapBuffer(GL_PIXEL_PACK_BUFFER,
+	    GL_READ_ONLY);
 	if (data != NULL) {
 		/* single pixel containing the clickspot index */
 		manip_idx = *data;
@@ -209,6 +210,18 @@ paint_manip(const mat4 pvm)
 	glViewport(vp[0], vp[1], vp[2], vp[3]);
 }
 
+static bool
+should_draw_manip(uint16_t manip_idx)
+{
+	const obj8_manip_t *manip;
+
+	if (manip_idx == UINT16_MAX)
+		return (false);
+	ASSERT(obj != NULL);
+	manip = obj8_get_manip(obj, manip_idx);
+	return (manip->type != OBJ8_MANIP_NOOP);
+}
+
 static int
 draw_cb(XPLMDrawingPhase phase, int before, void *refcon)
 {
@@ -240,7 +253,7 @@ draw_cb(XPLMDrawingPhase phase, int before, void *refcon)
 
 	UNUSED(resolve_manip);
 	resolve_manip(mouse_x, mouse_y, pvm);
-	if (manip_idx != UINT16_MAX)
+	if (should_draw_manip(manip_idx))
 		paint_manip(pvm);
 	glUseProgram(0);
 
@@ -279,7 +292,7 @@ create_cursor_objects(void)
 	glGenBuffers(1, &cursor_pbo);
 	VERIFY(cursor_pbo != 0);
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, cursor_pbo);
-	glBufferData(GL_PIXEL_PACK_BUFFER, sizeof (GLushort), NULL,
+	glBufferData(GL_PIXEL_PACK_BUFFER, sizeof (uint16_t), NULL,
 	    GL_STREAM_READ);
 	glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 }
